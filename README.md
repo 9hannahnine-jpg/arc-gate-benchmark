@@ -31,3 +31,10 @@ python benchmark.py
 Default target: `https://web-production-6e47f.up.railway.app/v1/chat/completions`
 
 Override with `ARC_GATE_URL` environment variable to test your own instance.
+
+## Related
+
+- [arc-gate](https://github.com/9hannahnine-jpg/arc-gate) — Runtime governance proxy for LLM agents
+- [arc-sentry](https://github.com/9hannahnine-jpg/arc-sentry) — Whitebox detector for self-hosted models
+- [arc-gate-mcp](https://github.com/9hannahnine-jpg/arc-gate-mcp) — Runtime governance for MCP tool calls
+- [arc-gate-benchmark](https://github.com/9hannahnine-jpg/arc-gate-benchmark) — Reproducible benchmark harness
