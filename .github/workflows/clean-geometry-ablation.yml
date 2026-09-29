@@ -1,0 +1,32 @@
+name: Clean geometry ablation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  ablation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy scipy scikit-learn datasets sentence-transformers torch
+      - name: Run clean ablation
+        run: |
+          python ablation_clean.py --benign 2000 --out ablation_results.json | tee ablation_stdout.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: clean-geometry-ablation
+          path: |
+            ablation_results.json
+            ablation_stdout.txt
