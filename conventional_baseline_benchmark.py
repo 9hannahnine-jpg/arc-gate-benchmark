@@ -52,7 +52,6 @@ from sklearn.metrics import roc_auc_score, average_precision_score, roc_curve
 ARC_RAW = "https://raw.githubusercontent.com/9hannahnine-jpg/arc-gate/main"
 BASELINES = [
     "protectai/deberta-v3-base-prompt-injection-v2",
-    "Keshav0av/deberta-v3-prompt-injection-detector",
 ]
 
 def get_bytes(url):
