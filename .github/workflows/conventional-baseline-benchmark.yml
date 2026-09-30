@@ -1,0 +1,29 @@
+name: Conventional Arc Gate baseline benchmark
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy scipy scikit-learn datasets transformers torch sentencepiece
+      - name: Run conventional benchmark
+        run: |
+          python conventional_baseline_benchmark.py | tee conventional_baseline_stdout.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: conventional-baseline-benchmark
+          path: |
+            conventional_baseline_results.json
+            conventional_baseline_stdout.txt
