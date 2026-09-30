@@ -150,7 +150,7 @@ def load_external_sets():
         t=get_text(r)
         if t is not None:
             texts.append(t); labels.append(int(r["label"]))
-    texts,labels=stratified_cap(texts,labels,600,42)
+    texts,labels=stratified_cap(texts,labels,200,42)
     out["neuralchemy_core_test"]=(texts,np.asarray(labels,dtype=int))
 
     ds2=load_dataset("jackhhao/jailbreak-classification")
@@ -165,7 +165,7 @@ def load_external_sets():
                 texts.append(t);labels.append(1)
             elif typ=="benign" or typ in {"0","safe","normal"}:
                 texts.append(t);labels.append(0)
-    texts,labels=stratified_cap(texts,labels,600,43)
+    texts,labels=stratified_cap(texts,labels,200,43)
     out["jackhhao"]=(texts,np.asarray(labels,dtype=int))
     return out
 
