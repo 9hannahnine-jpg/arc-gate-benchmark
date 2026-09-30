@@ -236,12 +236,10 @@ def temporal_features(E):
     turn_max = float(np.max(turns)) if turns else 0.0
 
     return np.array([
-        len(E),
         float(np.mean(steps)),
         float(np.std(steps)),
         float(np.max(steps)),
         float(steps[-1]),
-        path,
         endpoint,
         path / (endpoint + 1e-8),
         float(np.mean(np.abs(accel))),
@@ -253,8 +251,8 @@ def temporal_features(E):
     ], dtype=float)
 
 FEATURE_NAMES = [
-    "n_turns","mean_step","std_step","max_step","last_step",
-    "path_length","endpoint_displacement","tortuosity",
+    "mean_step","std_step","max_step","last_step",
+    "endpoint_displacement","tortuosity",
     "mean_abs_acceleration","max_abs_acceleration",
     "late_early_ratio","step_slope","mean_turn_angle","max_turn_angle",
 ]
@@ -325,8 +323,10 @@ def main():
         # Batch the entire corpus in one MiniLM pass, then split embeddings
         # back into conversations. This is mathematically identical to
         # per-session encoding but much faster on CPU.
-        sessions = [ss for ss in sessions if len(ss) >= MIN_USER_TURNS]
-        lengths = [len(ss) for ss in sessions]
+        # Fixed-window control: exactly the last 3 user turns from every
+        # conversation. Conversation length is therefore unavailable to the model.
+        sessions = [ss[-3:] for ss in sessions if len(ss) >= 3]
+        lengths = [3 for _ in sessions]
         flat = [turn for ss in sessions for turn in ss]
         all_E = model.encode(flat, batch_size=128, convert_to_numpy=True,
                              normalize_embeddings=True, show_progress_bar=False)
@@ -337,7 +337,7 @@ def main():
             pos += n
             X.append(temporal_features(E))
             static.append(angle(E[-1], C))
-            meta.append({"label":label,"source":source,"n_turns":n})
+            meta.append({"label":label,"source":source,"n_turns":3})
         return np.vstack(X), np.array(static), meta
 
     blocks = {}
@@ -347,7 +347,7 @@ def main():
 
     results = {
         "protocol": {
-            "observables": "MiniLM embeddings of successive user turns only",
+            "observables": "MiniLM embeddings of exactly the last 3 user turns only (length-matched control)",
             "forbidden_inputs": ["TF-IDF","phrase flags","authority events","LLM judge","production tau","attack labels as features"],
             "feature_names": FEATURE_NAMES,
             "attack_sources": list(attack_sources.keys()),
