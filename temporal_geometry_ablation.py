@@ -322,15 +322,22 @@ def main():
     C = C/(np.linalg.norm(C)+1e-12)
 
     def featurize_sessions(sessions, label, source):
-        X=[]; static=[]; meta=[]
-        for j,s in enumerate(sessions):
-            E = model.encode(s, batch_size=32, convert_to_numpy=True,
+        # Batch the entire corpus in one MiniLM pass, then split embeddings
+        # back into conversations. This is mathematically identical to
+        # per-session encoding but much faster on CPU.
+        sessions = [ss for ss in sessions if len(ss) >= MIN_USER_TURNS]
+        lengths = [len(ss) for ss in sessions]
+        flat = [turn for ss in sessions for turn in ss]
+        all_E = model.encode(flat, batch_size=128, convert_to_numpy=True,
                              normalize_embeddings=True, show_progress_bar=False)
-            if len(E) < MIN_USER_TURNS:
-                continue
+        X=[]; static=[]; meta=[]
+        pos = 0
+        for ss,n in zip(sessions,lengths):
+            E = all_E[pos:pos+n]
+            pos += n
             X.append(temporal_features(E))
             static.append(angle(E[-1], C))
-            meta.append({"label":label,"source":source,"n_turns":len(E)})
+            meta.append({"label":label,"source":source,"n_turns":n})
         return np.vstack(X), np.array(static), meta
 
     blocks = {}
