@@ -1,0 +1,29 @@
+name: Temporal one-class audit
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  oneclass:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy scikit-learn datasets sentence-transformers torch
+      - name: Run benign-only temporal audit
+        run: |
+          python temporal_oneclass.py | tee temporal_oneclass_stdout.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: temporal-oneclass-audit
+          path: |
+            temporal_oneclass_results.json
+            temporal_oneclass_stdout.txt
