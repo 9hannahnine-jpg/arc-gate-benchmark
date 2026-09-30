@@ -50,7 +50,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
 
 SEED = 42
-MAX_SESSIONS_PER_SOURCE = 2500
+MAX_SESSIONS_PER_SOURCE = 600
 MIN_USER_TURNS = 3
 ARC_GATE_RAW = "https://raw.githubusercontent.com/9hannahnine-jpg/arc-gate/main/arc_gate.py"
 
