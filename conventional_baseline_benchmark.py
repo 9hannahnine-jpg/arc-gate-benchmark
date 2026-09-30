@@ -122,6 +122,23 @@ def get_text(row):
         if isinstance(v,str) and v.strip():return v.strip()
     return None
 
+def stratified_cap(texts, labels, max_n=600, seed=42):
+    labels=np.asarray(labels,dtype=int)
+    if len(labels)<=max_n:
+        return list(texts),labels
+    rng=np.random.default_rng(seed)
+    pos=np.where(labels==1)[0]; neg=np.where(labels==0)[0]
+    npos=min(len(pos),max_n//2); nneg=min(len(neg),max_n-npos)
+    # If one class is short, give remainder to the other.
+    if npos+nneg<max_n:
+        if len(pos)>npos:
+            npos=min(len(pos),max_n-nneg)
+        if npos+nneg<max_n and len(neg)>nneg:
+            nneg=min(len(neg),max_n-npos)
+    idx=np.concatenate([rng.choice(pos,npos,False),rng.choice(neg,nneg,False)])
+    rng.shuffle(idx)
+    return [texts[i] for i in idx],labels[idx]
+
 def load_external_sets():
     from datasets import load_dataset
     out={}
@@ -133,6 +150,7 @@ def load_external_sets():
         t=get_text(r)
         if t is not None:
             texts.append(t); labels.append(int(r["label"]))
+    texts,labels=stratified_cap(texts,labels,600,42)
     out["neuralchemy_core_test"]=(texts,np.asarray(labels,dtype=int))
 
     ds2=load_dataset("jackhhao/jailbreak-classification")
@@ -147,6 +165,7 @@ def load_external_sets():
                 texts.append(t);labels.append(1)
             elif typ=="benign" or typ in {"0","safe","normal"}:
                 texts.append(t);labels.append(0)
+    texts,labels=stratified_cap(texts,labels,600,43)
     out["jackhhao"]=(texts,np.asarray(labels,dtype=int))
     return out
 
