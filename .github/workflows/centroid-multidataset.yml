@@ -1,0 +1,30 @@
+name: Multi-dataset centroid audit
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  centroid-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy scikit-learn datasets sentence-transformers torch
+      - name: Run multi-dataset centroid audit
+        run: |
+          python centroid_multidataset.py | tee centroid_multidataset_stdout.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: centroid-multidataset-audit
+          path: |
+            centroid_multidataset_results.json
+            centroid_distances.csv
+            centroid_multidataset_stdout.txt
