@@ -63,9 +63,9 @@ def load_injecagent_attacks():
         out.extend(str(r.get("Tool Response","")) for r in rows)
     return sample_cap(out)
 
-def dataset_rows(name):
+def dataset_rows(name, config=None):
     from datasets import load_dataset
-    ds = load_dataset(name)
+    ds = load_dataset(name, config) if config else load_dataset(name)
     rows = []
     if hasattr(ds, "items"):
         for split, part in ds.items():
@@ -93,9 +93,9 @@ def text_field(row):
                     return v.strip()
     return None
 
-def load_labeled_hf(name):
+def load_labeled_hf(name, config=None):
     attacks, benign = [], []
-    for r in dataset_rows(name):
+    for r in dataset_rows(name, config):
         txt = text_field(r)
         if not txt:
             continue
@@ -114,6 +114,19 @@ def load_labeled_hf(name):
                     benign.append(txt)
             except Exception:
                 pass
+    return sample_cap(attacks), sample_cap(benign)
+
+def load_jackhhao():
+    attacks, benign = [], []
+    for r in dataset_rows("jackhhao/jailbreak-classification"):
+        txt = text_field(r)
+        typ = str(r.get("type", "")).lower()
+        if not txt:
+            continue
+        if typ == "jailbreak":
+            attacks.append(txt)
+        elif typ == "benign":
+            benign.append(txt)
     return sample_cap(attacks), sample_cap(benign)
 
 def load_no_robots():
@@ -165,16 +178,24 @@ def main():
     except Exception as e:
         failures["attack_injecagent"] = repr(e)
 
-    for dsname, keyprefix in [
-        ("deepset/prompt-injections","deepset"),
-        ("protectai/prompt-injection-validation","protectai"),
+    for dsname, keyprefix, config in [
+        ("deepset/prompt-injections","deepset",None),
+        ("protectai/prompt-injection-validation","protectai",None),
+        ("neuralchemy/Prompt-injection-dataset","neuralchemy","core"),
     ]:
         try:
-            a,b = load_labeled_hf(dsname)
+            a,b = load_labeled_hf(dsname, config)
             sources[f"attack_{keyprefix}"] = a
             sources[f"benign_{keyprefix}"] = b
         except Exception as e:
             failures[keyprefix] = repr(e)
+
+    try:
+        a,b = load_jackhhao()
+        sources["attack_jackhhao"] = a
+        sources["benign_jackhhao"] = b
+    except Exception as e:
+        failures["jackhhao"] = repr(e)
 
     for name, loader in [
         ("benign_no_robots", load_no_robots),
